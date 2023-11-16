@@ -1,6 +1,6 @@
 {
   "name": "genpipe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Tiny data processing library for TypeScript based on composable async generators.",
   "main": "genpipe.js",
   "types": "genpipe.d.ts",
