@@ -444,7 +444,7 @@ function partial<T, A, R>(func: (t: T, ...a: A[]) => R): (...a: A[]) => (t: T) =
     return (...a: A[]) => (t) => func(t, ...a)
 }
 
-async function delay(ms: number): Promise<void> {
+export async function delay(ms: number): Promise<void> {
     return await new Promise((resolve) => setTimeout(resolve, ms))
 }
 
