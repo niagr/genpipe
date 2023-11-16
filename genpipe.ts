@@ -110,7 +110,7 @@ export class AsyncPipeline<T> {
 /**
  * Convenience function to convert an iterable to a generator.
  */
-function* toGen<T>(iter: Iterable<T>): Generator<T> {
+export function* toGen<T>(iter: Iterable<T>): Generator<T> {
     for (const x of iter) {
         yield x
     }
@@ -119,7 +119,7 @@ function* toGen<T>(iter: Iterable<T>): Generator<T> {
 /**
  * Convenience function to convert an iterable or async iterable to an async generator.
  */
-async function* toAsyncGen<T>(iter: Iterable<T> | AsyncIterable<T>): AsyncGenerator<T> {
+export async function* toAsyncGen<T>(iter: Iterable<T> | AsyncIterable<T>): AsyncGenerator<T> {
     if (Symbol.iterator in iter) {
         yield* toGen(iter)
     } else if (Symbol.asyncIterator in iter) {
@@ -187,6 +187,37 @@ export async function* mapAsync<T, U>(
     for await (const x of iter) {
         yield await func(x)
     }
+}
+
+/**
+ * Generator that applies the given async function to each element of the given iterable
+ * concurrently. The results are yielded in the order they complete, which may not be the
+ * same order as the order of the tasks in the input iterable.
+ */
+export function mapConcurrent<T, U>(
+    iter: AsyncIterable<T>,
+    concurrencyLimit: number,
+    func: (t: T) => Promise<U>,
+): AsyncGenerator<U> {
+    return new AsyncPipeline(iter)
+        .tf(F.mapAsync((x) => () => func(x)))
+        .tf(F.concurrent(concurrencyLimit))
+        .toAsyncGen()
+}
+
+/**
+ * Generator that applies the given async function to each element of the given iterable
+ * concurrently. The results are yielded in the same order as the tasks in the input iterable.
+ */
+export function mapConcurrentInOrder<T, U>(
+    iter: AsyncIterable<T>,
+    concurrencyLimit: number,
+    func: (t: T) => Promise<U>,
+): AsyncGenerator<U> {
+    return new AsyncPipeline(iter)
+        .tf(F.mapAsync((x) => () => func(x)))
+        .tf(F.concurrentInOrder(concurrencyLimit))
+        .toAsyncGen()
 }
 
 /**
@@ -307,21 +338,6 @@ export async function* execConcurrently<R>(
 }
 
 /**
- * Generator that applies the given async function to each element of the given iterable
- * concurrently.
- */
-export function mapConcurrent<T, U>(
-    iter: AsyncIterable<T>,
-    concurrencyLimit: number,
-    func: (t: T) => Promise<U>,
-): AsyncGenerator<U> {
-    return new AsyncPipeline(iter)
-        .tf(F.mapAsync((x) => () => func(x)))
-        .tf(F.concurrent(concurrencyLimit))
-        .toAsyncGen()
-}
-
-/**
  * A queue that yields its items in consecutive order.
  *
  * Items are added to the queue with an index. The queue will yield items only in consecutive order
@@ -355,7 +371,7 @@ class ConsecutiveQueue<T> {
         return item
     }
 
-    *removeOrdered(): Generator<T> {
+    *removeConsecutive(): Generator<T> {
         while (this.hasNext()) {
             yield this.remove()
         }
@@ -365,6 +381,14 @@ class ConsecutiveQueue<T> {
 /**
  * Asynchronously execute an iterable of tasks with a given concurrency limit, yielding results
  * in the same order as the tasks.
+ *
+ * The tasks are functions that start an asynchronous operation and return a promise. Tasks will be
+ * started up to the concurrency limit. As tasks are completed, the consecutive results available
+ * are yielded, in the same order as the tasks. If taks complete out of order, the results will be
+ * buffered in memory until the preceding results are available.
+ *
+ * If any of the tasks throw an error, the generator will throw that error immediately without
+ * waiting for the other tasks.
  */
 export async function* concurrentInOrder<R>(
     tasks: AsyncIterable<() => Promise<R>> | Iterable<() => Promise<R>>,
@@ -396,12 +420,12 @@ export async function* concurrentInOrder<R>(
         if (!nextResult.done) {
             while (executing.size >= limit) {
                 await Promise.race(executing)
-                yield* results.removeOrdered()
+                yield* results.removeConsecutive()
             }
             scheduleTask(currIdx++, nextResult.value)
         } else if (executing.size > 0) {
             await Promise.race(executing)
-            yield* results.removeOrdered()
+            yield* results.removeConsecutive()
         } else {
             break
         }
@@ -439,6 +463,7 @@ export const F = {
     map: partial(map),
     mapAsync: partial(mapAsync),
     mapConcurrent: partial(mapConcurrent),
+    mapConcurrentInOrder: partial(mapConcurrentInOrder),
     reduce: partial(reduce),
 } as const
 
