@@ -22,7 +22,6 @@ npm install genpipe
 import { Pipeline } from './genpipe'
 
 const x = new Pipeline(toGen([20, 5, 2, 1]))
-    .tf(F.filter((i) => i % 3 == 0))
     .tf(F.map((i) => i * 2))
     .toAsync()
     .tf(F.mapConcurrent(10, async (i) => {
@@ -30,7 +29,7 @@ const x = new Pipeline(toGen([20, 5, 2, 1]))
         console.log(`starting timeout async function ${i}`)
         await delay(timeout)
         console.log(`finished timeout async function ${i}`)
-        return i + 2
+        return i
     }))
     .eval()
 
