@@ -304,7 +304,7 @@ export function reduce<T, A>(iter: Iterable<T>, func: (acc: A, t: T) => A, initi
  * If any of the tasks throw an error, the generator will throw that error immediately without
  * waiting for the other tasks.
  */
-export async function* execConcurrently<R>(
+export async function* concurrent<R>(
     tasks: AsyncIterable<() => Promise<R>> | Iterable<() => Promise<R>>,
     limit: number,
 ): AsyncGenerator<R> {
@@ -454,7 +454,7 @@ export async function delay(ms: number): Promise<void> {
  */
 export const F = {
     batch: partial(batch),
-    concurrent: partial(execConcurrently),
+    concurrent: partial(concurrent),
     concurrentInOrder: partial(concurrentInOrder),
     filter: partial(filter),
     filterAsync: partial(filterAsync),
