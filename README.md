@@ -19,7 +19,7 @@ npm install genpipe
 ### Basic example
 
 ```typescript
-import { Pipeline } from './genpipe'
+import { Pipeline, toGen, F, delay } from 'genpipe'
 
 const x = new Pipeline(toGen([20, 5, 2, 1]))
     .tf(F.map((i) => i * 2))
