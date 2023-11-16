@@ -2,8 +2,8 @@
   "name": "genpipe",
   "version": "0.0.1",
   "description": "Tiny data processing library for TypeScript based on composable async generators.",
-  "main": "main.js",
-  "types": "main.d.ts",
+  "main": "genpipe.js",
+  "types": "genpipe.d.ts",
   "author": "Nishant George Agrwal",
   "license": "ISC",
   "scripts": {

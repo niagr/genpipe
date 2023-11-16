@@ -446,38 +446,3 @@ export const H = {
     logEach: F.forEach(console.log),
     logEachAsync: F.forEachAsync(console.log),
 } as const
-
-// if (import.meta.main) {
-//     const x = new Pipeline(toGen([20, 5, 2, 1]))
-//         // .tf(F.filter((i) => i % 3 == 0))
-//         // .tf(F.map((i) => i * 2))
-
-//         // .toAsync()
-//         // .tf(F.mapConcurrent(10, async (i) => {
-//         //     const timeout = 1000 * Math.max(0.5, Math.random())
-//         //     console.log(`starting timeout async function ${i}`)
-//         //     await delay(timeout)
-//         //     console.log(`finished timeout async function ${i}`)
-//         //     return i + 2
-//         // }))
-//         // .eval()
-
-//         .tf(F.map((i) => async () => {
-//             const timeout = 1000 * i
-//             console.log(`starting timeout async function ${i}`)
-//             await delay(timeout)
-//             console.log(`finished timeout async function ${i}`)
-//             return i
-//         }))
-//         .toAsync()
-//         .tf(F.concurrentInOrder(10))
-//         .eval()
-
-//     // .tf(F.map((i) => ({
-//     //     orig: i,
-//     //     double: i * 2,
-//     // })))
-//     // .eval()
-
-//     console.log(await x)
-// }
